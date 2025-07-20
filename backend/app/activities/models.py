@@ -27,9 +27,5 @@ class Activity(Base):
             "name": self.name,
             "url": self.url,
             "description": self.description,
-            "os": self.os,
-            "employees": [
-                {"id": employee.id, "name": employee.name}
-                for employee in self.employees
-            ] if self.employees else []
+            "os": self.os
         }

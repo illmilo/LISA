@@ -1,0 +1,50 @@
+{% extends 'agents/agents.html' %}
+
+{% block title %}Roles{% endblock %}
+{% block header %}Roles{% endblock %}
+
+{% load static %}
+
+{% block list-header %}Role{% endblock %}
+{% block create-header %}Role{% endblock %}
+
+{% block form-groups %}
+    <div class="form-group">
+        <label for="name">Role Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter Role name">
+    </div>
+{% endblock %}
+
+{% block submit-btn %}Create Role{% endblock %}
+
+{% block script %}
+    <script src="{% static 'js/dataLoader.js' %}"></script>
+    <script src="{% static 'js/listRenderer.js' %}"></script>
+    <script src="{% static 'js/dataDeleter.js' %}"></script>
+    <script src="{% static 'js/dataPoster.js' %}"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const RoleLoader = new DataLoader('http://localhost:8000/roles', 'role');
+    const RoleRenderer = new ItemRenderer('role', RoleLoader, '.list-content');
+
+    const RoleDeleter = new DataDeleter(RoleLoader, RoleRenderer, {
+        confirmMessage: 'Delete role {id}?',
+        successMessage: 'Role {id} deleted successfully'
+    });
+    RoleDeleter.setupDeletionListener();
+
+    const RolePoster = new DataPoster(
+        RoleLoader, 
+        RoleRenderer,
+        {
+            formId: 'create-form',
+            fieldMappings: {
+                name: 'name',
+            },
+        }
+    );
+    RolePoster.initialize();
+});
+    </script>
+{% endblock %}

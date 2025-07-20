@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.database import Base, str_uniq, int_pk, str_null_true
 from app.activities.models import Activity
 from app.servers.models import Server
-from app.roles.models import Role
 
 employee_activity = Table(
     'employee_activity',
@@ -24,7 +23,7 @@ class Employee(Base):
     activity_rate = mapped_column(Float, nullable=True)
     server_id: Mapped[int] = mapped_column(ForeignKey('servers.id'), default = 1)
     server: Mapped["Server"] = relationship("Server", back_populates="employees")
-    last_heartbeat = mapped_column(DateTime, nullable=True)
+    last_heartbeat = mapped_column(DateTime, nullable=True, default=None)
     agent_status = mapped_column(Text, nullable=True)
 
     def __str__(self):
@@ -53,5 +52,4 @@ class Employee(Base):
             "agent_status": self.agent_status,
         }
 
-# Важно: после удаления поля surname требуется миграция Alembic для удаления столбца из БД
 

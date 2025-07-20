@@ -14,4 +14,4 @@ class Role(Base):
     id: Mapped[int_pk]
     name: Mapped[str_uniq]
     activities: Mapped[list["Activity"]] = relationship("Activity", secondary=role_activity, back_populates="roles")
-    employees: Mapped[list["Employee"]] = relationship("app.employees.models.Employee", back_populates="role")
+    employees: Mapped[list["Employee"]] = relationship("Employee", back_populates="role")

@@ -3,7 +3,7 @@ from app.employees.models import Employee
 from app.activities.models import Activity
 from app.database import async_session_maker
 from sqlalchemy import select
-from app.employees.dao import EmployeeDAO, get_heartbeat_status
+from app.employees.dao import EmployeeDAO
 from app.employees.rb import RBEmp
 from app.employees.schemas import EmployeeSchema, EmployeeCreateSchema, EmployeeUpdateSchema, EmployeeSchemaWnoActivities
 from typing import List
@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 
 router_employees = APIRouter(prefix = '/agents', tags = ['Работа с агентами'])
 
-# Просто возвращаем данные из базы, не вычисляем heartbeat_status
 @router_employees.get("/", summary = 'Получить всех агентов')
 async def get_all_employees(request_body: RBEmp = Depends()) -> list[EmployeeSchemaWnoActivities]:
     employees = await EmployeeDAO.find_all(**request_body.to_dict())
@@ -130,9 +129,18 @@ async def start_agent(employee_id: int):
             with open(server_config_path, "w") as f:
                 json.dump(server_config, f, indent=2)
 
-    return {"status": "ok", "agent_dir": agent_dir, "config_path": config_path}
+    import subprocess
 
-    #дальше докер деплоит агента на сервер
+    main_script_path = os.path.join(agent_dir, "mainScript.sh")
+    if not os.path.isfile(main_script_path):
+        raise HTTPException(status_code=500, detail="mainScript.sh не найден в папке агента")
+
+    try:
+        subprocess.Popen(["bash", main_script_path], cwd=agent_dir)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка запуска MainScript.sh: {e}")
+
+    return {"status": "ok", "agent_dir": agent_dir, "config_path": config_path}
 
 
 @router_employees.post("/{employee_id}/stop_agent", summary="Остановить linux-агента")
@@ -145,6 +153,19 @@ async def agent_heartbeat(employee_id: int, status: str = Body(...)):
     async with async_session_maker() as session:
         await EmployeeDAO.update_heartbeat_and_status(employee_id, status, session)
     return {"status": "heartbeat received"}
+
+@router_employees.get("/{employee_id}/all_activities", summary="Получить все активности агента (роль + индивидуальные)")
+async def get_all_activities(employee_id: int):
+    activities = await EmployeeDAO.get_all_activities_for_employee(employee_id)
+    return {"activities": [a.to_dict() for a in activities]}
+
+@router_employees.post("/{employee_id}/assign_role/{role_id}", summary="Назначить роль агенту")
+async def assign_role_to_employee(employee_id: int, role_id: int):
+    try:
+        employee = await EmployeeDAO.assign_role_to_employee(employee_id, role_id)
+        return {"message": f"Роль {role_id} назначена агенту {employee_id}", "employee": employee}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 

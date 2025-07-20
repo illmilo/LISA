@@ -16,7 +16,7 @@ class RoleSchema(RoleBaseSchema):
     id: int
     activities: Optional[List[ActivityShallowSchema]] = Field(default_factory=list)
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class RoleSetActivitiesSchema(BaseModel):
     activity_ids: List[int] = Field(..., description="Список id активностей для роли")

@@ -11,6 +11,7 @@ import os
 import tempfile
 import datetime
 import glob
+import string
 
 
 def safe_run(cmd, shell=False):
@@ -63,7 +64,6 @@ def handle_firefox(action_data):
         print("[ERROR] selenium не установлен!")
         return
     
-
     url = action_data.get("url", "duckduckgo.com")
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -95,7 +95,7 @@ def handle_firefox(action_data):
         ]
     
     search_query = random.choice(searches)
-    firefox_search_on_url(url, search_query)
+    firefox_recursive_browse(url, search_query, depth=random.randrange(1, 10))
 
 def handle_libreoffice_calc(action_data):
     try:
@@ -187,6 +187,33 @@ def handle_terminal_command(action_data):
     else:
         print("[WARNING] Пустая команда")
 
+def handle_text_editor(action_data):
+    work_dir = get_work_dir()
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"text_editor_{timestamp}.txt"
+    file_path = os.path.join(work_dir, filename)
+
+    lines = random.randint(5, 15)
+    with open(file_path, 'w') as f:
+        for _ in range(lines):
+            line = ''.join(random.choices(string.ascii_letters + string.digits + ' ', k=random.randint(20, 60)))
+            f.write(line + "\n")
+
+    editor = action_data.get("editor", "nano")
+    cmd = [editor, file_path]
+    try:
+        process = subprocess.Popen(cmd)
+        time.sleep(random.randrange(5, 15))
+        process.terminate()
+        process.wait(timeout=5)
+    except Exception:
+        try:
+            process.kill()
+        except Exception as e:
+            print(f"[ERROR] Ошибка при закрытии текстового редактора: {e}")
+            
+            
+
 #ACTIVITY CENTER  
 
 def execute_activity_action(activity_name, action_data=None):
@@ -201,8 +228,6 @@ def execute_activity_action(activity_name, action_data=None):
         handle_libreoffice_calc(action_data)
     elif "libreoffice writer" in activity_lower or "writer" in activity_lower:
         handle_libreoffice_writer(action_data)
-    elif "gimp" in activity_lower:
-        handle_gimp(action_data)
     elif "text editor" in activity_lower or "editor" in activity_lower or "nano" in activity_lower or "vim" in activity_lower or "gedit" in activity_lower:
         handle_text_editor(action_data)
     elif "terminal" in activity_lower or "command" in activity_lower:
@@ -263,6 +288,54 @@ def firefox_search_on_url(url, query):
         if driver is not None:
             driver.quit()
 
+def firefox_recursive_browse(url, query, depth):
+    if webdriver is None:
+        print("[ERROR] selenium не установлен!")
+        return
+    driver = None
+    try:
+        options = Options()
+        #options.add_argument("--headless")
+        driver = webdriver.Firefox(options=options)
+        driver.get(url)
+        time.sleep(2)
+        if "duckduckgo" in url:
+            search_box = driver.find_element(By.NAME, "q")
+        elif "yandex" in url:
+            search_box = driver.find_element(By.NAME, "text")
+        else:
+            print("[ERROR] Неизвестный сайт для поиска, не могу найти поисковую строку.")
+            driver.quit()
+            return
+        search_box.send_keys(query)
+        search_box.send_keys(Keys.RETURN)
+        print(f"[LOG] Выполнен поиск на {url}: {query}")
+        time.sleep(random.randrange(10, 20))
+
+        for i in range(depth):
+            if "duckduckgo" in driver.current_url:
+                links = driver.find_elements(By.CSS_SELECTOR, "a.eVNpHGjtxRBq_gLOfGDr")
+            elif "yandex" in driver.current_url:
+                links = driver.find_elements(By.CSS_SELECTOR, "a.Link_theme_normal")
+            else:
+                links = driver.find_elements(By.TAG_NAME, "a")
+            visible_links = [l for l in links if l.is_displayed() and l.get_attribute('href')]
+            if visible_links:
+                chosen = random.choice(visible_links)
+                href = chosen.get_attribute('href')
+                print(f"[LOG] ({i+1}/{depth}) Переход по ссылке: {href}")
+                driver.get(href)
+                time.sleep(random.randrange(7, 15))
+            else:
+                print("[LOG] Нет видимых ссылок для перехода.")
+                break
+        driver.quit()
+    except Exception as e:
+        print(f"[ERROR] Ошибка при рекурсивном переходе в Firefox: {e}")
+    finally:
+        if driver is not None:
+            driver.quit()
+
 def end_of_day_cleanup():
     cleanup_old_files()
 
@@ -270,7 +343,7 @@ def end_of_day_cleanup():
 
 class DevHandler:
     def work(self, params):
-        actions = params.get("actions", [])
+        activities = params.get("activities", [])
         dev_commands = [
             {"name": "git status", "run": lambda: safe_run(["git", "status"])},
             {"name": "python version", "run": lambda: safe_run(["python", "--version"])},
@@ -279,30 +352,30 @@ class DevHandler:
             {"name": "echo dev", "run": lambda: safe_run(["echo", "Hello, Dev!"])}
         ]
         
-        if actions and random.random() < 0.7:
-            action = random.choice(actions)
-            return self._action_to_callable(action, "dev")
+        if activities and random.random() < 0.7:
+            activity = random.choice(activities)
+            return self._action_to_callable(activity, "dev")
         else:
             return random.choice(dev_commands)
 
-    def _action_to_callable(self, action, role):
-        if "name" in action and action["name"]:
+    def _action_to_callable(self, activity, role):
+        if "name" in activity and activity["name"]:
             action_data = {
-                "name": action["name"],
-                "url": action.get("url"),
+                "name": activity["name"],
+                "url": activity.get("url"),
                 "role": role
             }
             
             return {
-                "name": f"execute {action['name']}",
-                "run": lambda: execute_activity_action(action["name"], action_data)
+                "name": f"execute {activity['name']}",
+                "run": lambda: execute_activity_action(activity["name"], action_data)
             }
         else:
             return {"name": "unknown", "run": lambda: print("Неизвестное действие")}
 
 class AdminHandler:
     def work(self, params):
-        actions = params.get("actions", [])
+        activities = params.get("activities", [])
         admin_commands = [
             {"name": "ps aux", "run": lambda: safe_run(["ps", "aux"])},
             {"name": "whoami", "run": lambda: safe_run(["whoami"])},
@@ -313,48 +386,48 @@ class AdminHandler:
             {"name": "journalctl -n 10", "run": lambda: safe_run(["journalctl", "-n", "10"])}
         ]
         
-        if actions and random.random() < 0.6:
-            action = random.choice(actions)
-            return self._action_to_callable(action, "admin")
+        if activities and random.random() < 0.6:
+            activity = random.choice(activities)
+            return self._action_to_callable(activity, "admin")
         else:
             return random.choice(admin_commands)
 
-    def _action_to_callable(self, action, role):
-        if "name" in action and action["name"]:
+    def _action_to_callable(self, activity, role):
+        if "name" in activity and activity["name"]:
             action_data = {
-                "name": action["name"],
-                "url": action.get("url"),
+                "name": activity["name"],
+                "url": activity.get("url"),
                 "role": role
             }
             
             return {
-                "name": f"execute {action['name']}",
-                "run": lambda: execute_activity_action(action["name"], action_data)
+                "name": f"execute {activity['name']}",
+                "run": lambda: execute_activity_action(activity["name"], action_data)
             }
         else:
             return {"name": "unknown", "run": lambda: print("Неизвестное действие")}
 
 class UserHandler:
     def work(self, params):
-        actions = params.get("actions", [])
-        if not actions:
-            print("[LOG] Нет доступных действий в конфиге!")
+        activities = params.get("activities", [])
+        if not activities:
+            print("[LOG] Нет доступных активностей в конфиге!")
             return {"name": "no_action", "run": lambda: print("Нет действия")}
         
-        action = random.choice(actions)
-        return self._action_to_callable(action, "user")
+        activity = random.choice(activities)
+        return self._action_to_callable(activity, "user")
 
-    def _action_to_callable(self, action, role):
-        if "name" in action and action["name"]:
+    def _action_to_callable(self, activity, role):
+        if "name" in activity and activity["name"]:
             action_data = {
-                "name": action["name"],
-                "url": action.get("url"),
+                "name": activity["name"],
+                "url": activity.get("url"),
                 "role": role
             }
             
             return {
-                "name": f"execute {action['name']}",
-                "run": lambda: execute_activity_action(action["name"], action_data)
+                "name": f"execute {activity['name']}",
+                "run": lambda: execute_activity_action(activity["name"], action_data)
             }
         else:
             return {"name": "unknown", "run": lambda: print("Неизвестное действие")}

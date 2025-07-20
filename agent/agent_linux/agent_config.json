@@ -1,30 +1,41 @@
 {
-  "employee_id": 1,
-  "role": "admin",
+  "employee_id": 4,
+  "name": "John",
+  "role": "user",
+  "os": "windows",
   "work_start_time": "00:00:00",
   "work_end_time": "23:59:00",
   "activity_rate": 1.0,
-  "actions": [
+  "activities": [
     {
       "id": 1,
       "name": "firefox",
       "url": "duckduckgo.com",
-      "description": "Default description",
+      "description": "Web browser",
       "os": "linux"
     },
     {
       "id": 2,
-      "name": "LibreOffice Writer",
+      "name": "libreoffice calc",
       "url": null,
-      "description": "Full-featured word processor with page and text formatting capabilities",
+      "description": "Spreadsheet",
+      "os": "linux"
+    },
+    {
+      "id": 4,
+      "name": "text editor",
+      "url": null,
+      "description": "Simple text editor",
       "os": "linux"
     },
     {
       "id": 3,
-      "name": "LibreOffice Calc",
+      "name": "libreoffice writer",
       "url": null,
-      "description": "Powerful, free, and open-source spreadsheet program that is part of the LibreOffice suite",
+      "description": "Text editor",
       "os": "linux"
     }
-  ]
+  ],
+  "server_id": 1,
+  "last_heartbeat": null
 }
