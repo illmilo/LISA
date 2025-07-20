@@ -1,0 +1,77 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
+{% endblock %}
+{% block content %}
+<style>
+a.create-btn, a.edit-btn {
+    text-decoration: none !important;
+}
+</style>
+<div class="main-content" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку ролей</a>
+    <h1 style="margin-bottom:24px;">Детали роли</h1>
+    <div class="item list-item" style="margin-bottom:32px;flex-direction:column;align-items:flex-start;">
+        <div><b>Имя:</b> <span id="role-name"></span></div>
+        <div><b>ID:</b> <span id="role-id"></span></div>
+    </div>
+    <div style="display:flex; gap:16px; margin-bottom:30px;justify-content:center;">
+        <a href="/roles/{{ role_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;padding:8px 12px;background:linear-gradient(90deg,#6366f1,#a5b4fc);border-radius:8px;z-index:2;display:flex;align-items:center;gap:6px;color:white;text-decoration:none;">
+            <i class="fa-solid fa-pen-to-square"></i>
+        </a>
+        <button class="create-btn" onclick="deleteRole({{ role_id }})" style="background:linear-gradient(90deg,#ef4444,#fca5a5);">Удалить</button>
+    </div>
+    <h2 style="margin-bottom:12px;">Активности роли</h2>
+    <div class="list" id="role-activities-list"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+function loadRole() {
+    fetch(`http://localhost:8000/roles/{{ role_id }}`)
+      .then(resp => resp.json())
+      .then(data => {
+          document.getElementById('role-name').innerText = data.name;
+          document.getElementById('role-id').innerText = data.id;
+      })
+      .catch(() => showToast('Ошибка загрузки роли', 'error'));
+    fetch(`http://localhost:8000/roles/{{ role_id }}/activities`)
+      .then(resp => resp.json())
+      .then(data => {
+          const list = document.getElementById('role-activities-list');
+          list.innerHTML = '';
+          if (!data.length) {
+              list.innerHTML = '<div style="color:#888;">Нет активностей у этой роли</div>';
+              return;
+          }
+          data.forEach(activity => {
+              const div = document.createElement('div');
+              div.className = 'item list-item';
+              div.innerHTML = `<span>${activity.name}</span> <span style='color:#aaa;'>ID: ${activity.id}</span>`;
+              div.onclick = () => location.href = `/activities/${activity.id}/`;
+              list.appendChild(div);
+          });
+      })
+      .catch(() => showToast('Ошибка загрузки активностей роли', 'error'));
+}
+function deleteRole(id) {
+    if (!confirm('Удалить роль?')) return;
+    fetch(`http://localhost:8000/roles/${id}`, {method: 'DELETE'})
+      .then(resp => resp.json())
+      .then(data => {
+          showToast('Роль удалена', 'success');
+          setTimeout(() => location.href = '/roles/', 1200);
+      })
+      .catch(() => showToast('Ошибка удаления роли', 'error'));
+}
+document.addEventListener('DOMContentLoaded', loadRole);
+</script>
+{% endblock %} 

@@ -4,6 +4,8 @@ from app.servers.models import Server
 from app.database import async_session_maker
 from sqlalchemy.future import select
 from typing import List
+from app.employees.models import Employee
+from sqlalchemy import select
 
 router_servers = APIRouter(prefix='/servers', tags=['Работа с серверами'])
 
@@ -57,7 +59,6 @@ async def add_employee_to_server(server_id: int, employee_id: int):
         server = await session.get(Server, server_id)
         if not server:
             raise HTTPException(status_code=404, detail="Сервер не найден")
-        from app.employees.models import Employee
         employee = await session.get(Employee, employee_id)
         if not employee:
             raise HTTPException(status_code=404, detail="Сотрудник не найден")
@@ -76,7 +77,6 @@ async def remove_employee_from_server(server_id: int, employee_id: int):
         server = await session.get(Server, server_id)
         if not server:
             raise HTTPException(status_code=404, detail="Сервер не найден")
-        from app.employees.models import Employee
         employee = await session.get(Employee, employee_id)
         if not employee:
             raise HTTPException(status_code=404, detail="Сотрудник не найден")
@@ -87,3 +87,10 @@ async def remove_employee_from_server(server_id: int, employee_id: int):
         await session.commit()
         await session.refresh(server)
     return {"message": "Сотрудник удалён с сервера"}
+
+@router_servers.get('/{server_id}/agents')
+async def get_server_agents(server_id: int):
+    async with async_session_maker() as session:
+        result = await session.execute(select(Employee).where(Employee.server_id == server_id))
+        agents = result.scalars().all()
+        return [a.to_dict() for a in agents]

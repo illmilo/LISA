@@ -1,50 +1,43 @@
-{% extends 'agents/agents.html' %}
-
-{% block title %}Roles{% endblock %}
-{% block header %}Roles{% endblock %}
-
+{% extends 'dashboard/dashboard.html' %}
 {% load static %}
-
-{% block list-header %}Role{% endblock %}
-{% block create-header %}Role{% endblock %}
-
-{% block form-groups %}
-    <div class="form-group">
-        <label for="name">Role Name</label>
-        <input type="text" id="name" name="name" placeholder="Enter Role name">
-    </div>
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
 {% endblock %}
-
-{% block submit-btn %}Create Role{% endblock %}
-
-{% block script %}
-    <script src="{% static 'js/dataLoader.js' %}"></script>
-    <script src="{% static 'js/listRenderer.js' %}"></script>
-    <script src="{% static 'js/dataDeleter.js' %}"></script>
-    <script src="{% static 'js/dataPoster.js' %}"></script>
-    
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const RoleLoader = new DataLoader('http://localhost:8000/roles', 'role');
-    const RoleRenderer = new ItemRenderer('role', RoleLoader, '.list-content');
-
-    const RoleDeleter = new DataDeleter(RoleLoader, RoleRenderer, {
-        confirmMessage: 'Delete role {id}?',
-        successMessage: 'Role {id} deleted successfully'
-    });
-    RoleDeleter.setupDeletionListener();
-
-    const RolePoster = new DataPoster(
-        RoleLoader, 
-        RoleRenderer,
-        {
-            formId: 'create-form',
-            fieldMappings: {
-                name: 'name',
-            },
-        }
-    );
-    RolePoster.initialize();
-});
-    </script>
+{% block title %}Роли{% endblock %}
+{% block content %}
+<div class="main-content" style="max-width:1000px;margin:auto;">
+    <h1 style="text-align:center;margin-bottom:24px;">Роли</h1>
+    <div class="list">
+        <div class="list-content" id="roles-list"></div>
+    </div>
+    <button class="create-btn" onclick="location.href='/roles/create/'" style="display:block;margin:32px auto 0 auto;">Создать роль</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+function loadRoles() {
+    fetch('http://localhost:8000/roles')
+      .then(resp => resp.json())
+      .then(data => {
+          const list = document.getElementById('roles-list');
+          list.innerHTML = '';
+          data.forEach(role => {
+              const div = document.createElement('div');
+              div.className = 'item list-item';
+              div.innerHTML = `<span>${role.name}</span> <span style='color:#aaa;'>ID: ${role.id}</span>`;
+              div.onclick = () => location.href = `/roles/${role.id}/`;
+              list.appendChild(div);
+          });
+      })
+      .catch(() => showToast('Ошибка загрузки ролей', 'error'));
+}
+document.addEventListener('DOMContentLoaded', loadRoles);
+</script>
 {% endblock %}

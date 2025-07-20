@@ -25,8 +25,8 @@ class EmployeeSchema(BaseModel):
     role_id: Optional[int]
     activity_ids: List[int]
     os: str
-    work_start_time: Optional[str]
-    work_end_time: Optional[str]
+    work_start_time: Optional[time]
+    work_end_time: Optional[time]
     activity_rate: Optional[float]
     server_id: Optional[int]
     last_heartbeat: Optional[str]
@@ -53,8 +53,8 @@ class EmployeeCreateSchema(BaseModel):
     role_id: Optional[int]
     activity_ids: List[int] = Field(default_factory=list)
     os: str
-    work_start_time: Optional[str]
-    work_end_time: Optional[str]
+    work_start_time: time = Field(..., description="Время начала работы")
+    work_end_time: time = Field(..., description="Время окончания работы")
     activity_rate: Optional[float]
     server_id: Optional[int]
 
@@ -63,8 +63,8 @@ class EmployeeUpdateSchema(BaseModel):
     role_id: Optional[int]
     activity_ids: Optional[List[int]]
     os: Optional[str]
-    work_start_time: Optional[str]
-    work_end_time: Optional[str]
+    work_start_time: Optional[time]
+    work_end_time: Optional[time]
     activity_rate: Optional[float]
     server_id: Optional[int]
 

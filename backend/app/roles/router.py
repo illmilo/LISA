@@ -4,6 +4,9 @@ from app.roles.models import Role
 from app.database import async_session_maker
 from sqlalchemy.future import select
 from typing import List
+from app.activities.models import Activity
+from app.activities.schemas import ActivitySchema
+from sqlalchemy import select
 
 router_roles = APIRouter(prefix='/roles', tags=['Роли'])
 
@@ -15,7 +18,7 @@ async def create_role(role: RoleCreateSchema):
         await session.commit()
     return {"message": "Роль успешно создана"}
 
-@router_roles.get('/', response_model=List[RoleNameSchema])
+@router_roles.get('/', response_model=List[RoleSchema])
 async def get_all_roles():
     async with async_session_maker() as session:
         result = await session.execute(select(Role))
@@ -76,3 +79,15 @@ async def remove_activity_from_role(role_id: int, activity_id: int):
         await session.commit()
         await session.refresh(role)
     return {"message": "Активность удалена у роли"}
+
+@router_roles.get('/{role_id}/activities')
+async def get_role_activities(role_id: int):
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail='Роль не найдена')
+        if not role.activity_ids:
+            return []
+        result = await session.execute(select(Activity).where(Activity.id.in_(role.activity_ids)))
+        activities = result.scalars().all()
+        return [ActivitySchema.model_validate(a, from_attributes=True) for a in activities]

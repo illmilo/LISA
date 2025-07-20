@@ -3,14 +3,14 @@
 {% block style %}
 <link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
 {% endblock %}
-{% block title %}Агенты{% endblock %}
+{% block title %}Активности{% endblock %}
 {% block content %}
 <div class="main-content" style="max-width:1000px;margin:auto;">
-    <h1 style="text-align:center;margin-bottom:24px;">Агенты</h1>
+    <h1 style="text-align:center;margin-bottom:24px;">Активности</h1>
     <div class="list">
-        <div class="list-content" id="agents-list"></div>
+        <div class="list-content" id="activities-list"></div>
     </div>
-    <button class="create-btn" onclick="location.href='/agents/create/'" style="display:block;margin:32px auto 0 auto;">Создать агента</button>
+    <button class="create-btn" onclick="location.href='/activities/create/'" style="display:block;margin:32px auto 0 auto;">Создать активность</button>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -22,22 +22,22 @@ function showToast(msg, type='success') {
     else toast.style.background = '';
     setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
 }
-function loadAgents() {
-    fetch('http://localhost:8000/agents')
+function loadActivities() {
+    fetch('http://localhost:8000/activities')
       .then(resp => resp.json())
       .then(data => {
-          const list = document.getElementById('agents-list');
+          const list = document.getElementById('activities-list');
           list.innerHTML = '';
-          data.forEach(agent => {
+          data.forEach(activity => {
               const div = document.createElement('div');
               div.className = 'item list-item';
-              div.innerHTML = `<span>${agent.name}</span> <span style='color:#aaa;'>ID: ${agent.id}</span>`;
-              div.onclick = () => location.href = `/agents/${agent.id}/`;
+              div.innerHTML = `<span>${activity.name}</span> <span style='color:#aaa;'>ID: ${activity.id}</span>`;
+              div.onclick = () => location.href = `/activities/${activity.id}/`;
               list.appendChild(div);
           });
       })
-      .catch(() => showToast('Ошибка загрузки агентов', 'error'));
+      .catch(() => showToast('Ошибка загрузки активностей', 'error'));
 }
-document.addEventListener('DOMContentLoaded', loadAgents);
+document.addEventListener('DOMContentLoaded', loadActivities);
 </script>
-{% endblock %}
+{% endblock %} 

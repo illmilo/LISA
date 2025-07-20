@@ -1,0 +1,113 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
+{% endblock %}
+{% block content %}
+<style>
+a.create-btn, a.edit-btn {
+    text-decoration: none !important;
+}
+.agent-chip, .role-chip {
+    display: inline-block;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 4px 12px;
+    margin: 0 8px 8px 0;
+    color: #6366f1;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+.agent-chip:hover, .role-chip:hover {
+    background: #6366f1;
+    color: #fff;
+    text-decoration: none;
+}
+</style>
+<div class="main-content" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку активностей</a>
+    <a href="/activities/{{ activity_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;padding:8px 12px;background:linear-gradient(90deg,#A855F7,#7E22CE);border-radius:8px;z-index:2;display:flex;align-items:center;gap:6px;color:white;text-decoration:none;">
+        <i class="fa-solid fa-pen-to-square"></i>
+    </a>
+    <h1 style="margin-bottom:24px;">Детали активности</h1>
+    <div class="item list-item" style="margin-bottom:32px;flex-direction:column;align-items:flex-start;">
+        <div><b>Имя:</b> <span id="activity-name"></span></div>
+        <div><b>ID:</b> <span id="activity-id"></span></div>
+        <div><b>Описание:</b> <span id="activity-description"></span></div>
+    </div>
+    <div style="display:flex; gap:16px; margin-bottom:30px;justify-content:center;">
+        <a href="/activities/{{ activity_id }}/delete/" class="create-btn" style="background:linear-gradient(90deg,#ef4444,#fca5a5);">Удалить</a>
+    </div>
+    <div id="activity-agents" style="margin-bottom:18px;"></div>
+    <div id="activity-roles"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+function loadActivity() {
+    fetch(`http://localhost:8000/activities/{{ activity_id }}`)
+      .then(resp => resp.json())
+      .then(data => {
+          document.getElementById('activity-name').innerText = data.name;
+          document.getElementById('activity-id').innerText = data.id;
+          document.getElementById('activity-description').innerText = data.description || '-';
+      })
+      .catch(() => showToast('Ошибка загрузки активности', 'error'));
+    fetch(`http://localhost:8000/activities/{{ activity_id }}/agents`)
+      .then(resp => resp.json())
+      .then(data => {
+          const el = document.getElementById('activity-agents');
+          el.innerHTML = '<b>Агенты:</b> ';
+          if (!data.length) {
+              el.innerHTML += '<span style="color:#888;">нет агентов</span>';
+              return;
+          }
+          data.forEach(agent => {
+              const a = document.createElement('a');
+              a.href = `/agents/${agent.id}/`;
+              a.textContent = agent.name + ' (ID: ' + agent.id + ')';
+              a.className = 'agent-chip';
+              el.appendChild(a);
+          });
+      })
+      .catch(() => showToast('Ошибка загрузки агентов активности', 'error'));
+    fetch(`http://localhost:8000/activities/{{ activity_id }}/roles`)
+      .then(resp => resp.json())
+      .then(data => {
+          const el = document.getElementById('activity-roles');
+          el.innerHTML = '<b>Роли:</b> ';
+          if (!data.length) {
+              el.innerHTML += '<span style="color:#888;">нет ролей</span>';
+              return;
+          }
+          data.forEach(role => {
+              const a = document.createElement('a');
+              a.href = `/roles/${role.id}/`;
+              a.textContent = role.name + ' (ID: ' + role.id + ')';
+              a.className = 'role-chip';
+              el.appendChild(a);
+          });
+      })
+      .catch(() => showToast('Ошибка загрузки ролей активности', 'error'));
+}
+function deleteActivity(id) {
+    if (!confirm('Удалить активность?')) return;
+    fetch(`http://localhost:8000/activities/${id}`, {method: 'DELETE'})
+      .then(resp => resp.json())
+      .then(data => {
+          showToast('Активность удалена', 'success');
+          setTimeout(() => location.href = '/activities/', 1200);
+      })
+      .catch(() => showToast('Ошибка удаления активности', 'error'));
+}
+document.addEventListener('DOMContentLoaded', loadActivity);
+</script>
+{% endblock %} 

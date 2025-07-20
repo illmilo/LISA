@@ -4,6 +4,8 @@ from app.activities.dao import ActivityDAO
 from app.activities.schemas import ActivitySchema, ActivityCreateSchema, ActivityUpdateSchema
 from app.database import async_session_maker
 from sqlalchemy import select
+from app.employees.models import Employee
+from app.roles.models import Role
 
 router_activities = APIRouter(prefix='/activities', tags=['Работа с активностями'])
 
@@ -21,7 +23,23 @@ async def get_activity_by_id(activity_id: int):
     return activity
 
 
+@router_activities.get('/{activity_id}/agents')
+async def get_activity_agents(activity_id: int):
+    async with async_session_maker() as session:
+        result = await session.execute(
+            select(Employee).where(Employee.activity_ids != None, Employee.activity_ids.any(activity_id))
+        )
+        agents = result.scalars().all()
+        return [a.to_dict() for a in agents]
 
+@router_activities.get('/{activity_id}/roles')
+async def get_activity_roles(activity_id: int):
+    async with async_session_maker() as session:
+        result = await session.execute(
+            select(Role).where(Role.activity_ids != None, Role.activity_ids.any(activity_id))
+        )
+        roles = result.scalars().all()
+        return [{"id": r.id, "name": r.name} for r in roles]
 
 
 @router_activities.post("/", summary='Создать новую активность')

@@ -1,63 +1,43 @@
-{% extends 'agents/agents.html' %}
-
-{% block title %}Servers{% endblock %}
-{% block header %}Servers{% endblock %}
-
+{% extends 'dashboard/dashboard.html' %}
 {% load static %}
-
-{% block list-header %}Server{% endblock %}
-{% block create-header %}Server{% endblock %}
-
-{% block form-groups %}
-    <div class="form-group">
-        <label for="name">Server Name</label>
-        <input type="text" id="name" name="name" placeholder="Enter server name">
-    </div>
-    
-    <div class="form-group">
-        <label for="password">Root Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter root password" required>
-    </div>
-
-    <div class="form-group">
-        <label for="server_key">Server Key</label>
-        <input type="text" id="server_key" name="server_key" placeholder="Enter server key (SSH, etc)" required>
-    </div>
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
 {% endblock %}
-
-{% block submit-btn %}Create Server{% endblock %}
-
-{% block script %}
-    <script src="{% static 'js/dataLoader.js' %}"></script>
-    <script src="{% static 'js/listRenderer.js' %}"></script>
-    <script src="{% static 'js/dropdownLoader.js' %}"></script>
-    <script src="{% static 'js/dataDeleter.js' %}"></script>
-    <script src="{% static 'js/dataPoster.js' %}"></script>
-    
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const serverLoader = new DataLoader('http://localhost:8000/servers', 'server');
-    const serverRenderer = new ItemRenderer('server', serverLoader, '.list-content');
-
-    const serverDeleter = new DataDeleter(serverLoader, serverRenderer, {
-        confirmMessage: 'Delete server {id}?',
-        successMessage: 'Server {id} deleted successfully'
-    });
-    serverDeleter.setupDeletionListener();
-
-    const serverPoster = new DataPoster(
-        serverLoader, 
-        serverRenderer,
-        {
-            formId: 'create-form',
-            fieldMappings: {
-                name: 'name',
-                password: 'password',
-                server_key: 'server_key'
-            },
-        }
-    );
-    serverPoster.initialize();
-});
-    </script>
+{% block title %}Серверы{% endblock %}
+{% block content %}
+<div class="main-content" style="max-width:1000px;margin:auto;">
+    <h1 style="text-align:center;margin-bottom:24px;">Серверы</h1>
+    <div class="list">
+        <div class="list-content" id="servers-list"></div>
+    </div>
+    <button class="create-btn" onclick="location.href='/servers/create/'" style="display:block;margin:32px auto 0 auto;">Создать сервер</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+function loadServers() {
+    fetch('http://localhost:8000/servers')
+      .then(resp => resp.json())
+      .then(data => {
+          const list = document.getElementById('servers-list');
+          list.innerHTML = '';
+          data.forEach(server => {
+              const div = document.createElement('div');
+              div.className = 'item list-item';
+              div.innerHTML = `<span>${server.name}</span> <span style='color:#aaa;'>ID: ${server.id}</span>`;
+              div.onclick = () => location.href = `/servers/${server.id}/`;
+              list.appendChild(div);
+          });
+      })
+      .catch(() => showToast('Ошибка загрузки серверов', 'error'));
+}
+document.addEventListener('DOMContentLoaded', loadServers);
+</script>
 {% endblock %}

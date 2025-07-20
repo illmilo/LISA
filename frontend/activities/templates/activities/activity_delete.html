@@ -1,0 +1,39 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
+{% endblock %}
+{% block content %}
+<div class="main-content" style="max-width:400px;margin:auto;">
+    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку активностей</a>
+    <h1 style="margin-bottom:24px;">Удалить активность</h1>
+    <div class="item list-item" style="margin-bottom:32px;flex-direction:column;align-items:flex-start;">
+        <div>Вы уверены, что хотите удалить эту активность?</div>
+    </div>
+    <div style="display:flex; gap:16px; margin-bottom:30px;justify-content:center;">
+        <button class="create-btn" onclick="deleteActivity({{ activity_id }})" style="background:linear-gradient(90deg,#ef4444,#fca5a5);">Удалить</button>
+        <a href="/activities/{{ activity_id }}/" class="create-btn" style="background:linear-gradient(90deg,#6366f1,#a5b4fc);">Отмена</a>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+function deleteActivity(id) {
+    if (!confirm('Удалить активность?')) return;
+    fetch(`http://localhost:8000/activities/${id}`, {method: 'DELETE'})
+      .then(resp => resp.json())
+      .then(data => {
+          showToast('Активность удалена', 'success');
+          setTimeout(() => location.href = '/activities/', 1200);
+      })
+      .catch(() => showToast('Ошибка удаления', 'error'));
+}
+</script>
+{% endblock %} 

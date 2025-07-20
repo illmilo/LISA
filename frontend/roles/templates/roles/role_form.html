@@ -1,0 +1,147 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
+<style>
+a.create-btn, a.edit-btn {
+    text-decoration: none !important;
+}
+.form-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px 0 rgba(80, 80, 120, 0.10), 0 1.5px 6px 0 rgba(80,80,120,0.08);
+    padding: 36px 32px 28px 32px;
+    margin: 0 auto 32px auto;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.form-card label {
+    font-weight: 500;
+    color: #222;
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-card input, .form-card select, .form-card textarea {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    background: #f9fafb;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.form-card input:focus, .form-card select:focus, .form-card textarea:focus {
+    border: 1.5px solid #6366f1;
+    box-shadow: 0 0 0 2px #a5b4fc44;
+    background: #fff;
+}
+.form-card button.create-btn {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 12px 0;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+.form-card .checkbox-list label {
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 4px 10px;
+    margin: 0 6px 6px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="main-content" style="max-width:500px;margin:auto;">
+    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку ролей</a>
+    <h1 style="margin-bottom:24px;">Редактировать роль</h1>
+    <form id="role-form" class="form-card">
+        <label>Имя роли:<input type="text" name="name" id="name" required maxlength="50"></label>
+        <div style="margin:18px 0 8px 0;"><b>Активности:</b></div>
+        <div id="activities-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+        <button type="submit" class="create-btn" style="margin-top:18px;">Сохранить</button>
+    </form>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+let allActivities = [];
+let roleData = null;
+let loaded = {activities: false, role: false};
+function tryFillForm() {
+    if (loaded.activities && loaded.role) fillForm(roleData);
+}
+function fillForm(role) {
+    roleData = role;
+    document.getElementById('name').value = role.name || '';
+    // Автозаполнение чекбоксов активностей
+    let checkedIds = Array.isArray(role.activity_ids) ? role.activity_ids : [];
+    renderActivities(checkedIds);
+}
+function renderActivities(checkedIds) {
+    const list = document.getElementById('activities-list');
+    list.innerHTML = '';
+    allActivities.forEach(act => {
+        const id = act.id;
+        const label = document.createElement('label');
+        label.style = 'display:inline-flex;align-items:center;gap:6px;background:#f3f4f6;padding:4px 10px;border-radius:8px;cursor:pointer;';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = id;
+        cb.checked = checkedIds.includes(id);
+        cb.onchange = e => {
+            if (e.target.checked) checkedIds.push(id);
+            else checkedIds = checkedIds.filter(x => x !== id);
+        };
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(act.name));
+        list.appendChild(label);
+    });
+}
+fetch('http://localhost:8000/activities')
+  .then(resp => resp.json())
+  .then(data => { allActivities = data; loaded.activities = true; tryFillForm(); })
+  .catch(() => showToast('Ошибка загрузки активностей', 'error'));
+fetch(`http://localhost:8000/roles/{{ role_id }}`)
+  .then(resp => resp.json())
+  .then(data => { roleData = data; loaded.role = true; tryFillForm(); })
+  .catch(() => showToast('Ошибка загрузки роли', 'error'));
+document.getElementById('role-form').onsubmit = function(e) {
+    e.preventDefault();
+    const checkedIds = Array.from(document.querySelectorAll('#activities-list input[type=checkbox]:checked')).map(cb => parseInt(cb.value));
+    const data = {
+        name: document.getElementById('name').value,
+        activity_ids: checkedIds
+    };
+    fetch(`http://localhost:8000/roles/{{ role_id }}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        if (resp.id) {
+            showToast('Изменения сохранены!');
+            setTimeout(() => location.href = '/roles/{{ role_id }}/', 1200);
+        } else {
+            showToast('Ошибка сохранения', 'error');
+        }
+    })
+    .catch(() => showToast('Ошибка сохранения', 'error'));
+};
+</script>
+{% endblock %} 

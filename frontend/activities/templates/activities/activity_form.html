@@ -1,0 +1,134 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+{% block style %}
+<link rel="stylesheet" href="{% static 'agents/css/style.css' %}">
+<style>
+a.create-btn, a.edit-btn {
+    text-decoration: none !important;
+}
+.form-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px 0 rgba(80, 80, 120, 0.10), 0 1.5px 6px 0 rgba(80,80,120,0.08);
+    padding: 36px 32px 28px 32px;
+    margin: 0 auto 32px auto;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.form-card label {
+    font-weight: 500;
+    color: #222;
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-card input, .form-card select, .form-card textarea {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    background: #f9fafb;
+    transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.form-card input:focus, .form-card select:focus, .form-card textarea:focus {
+    border: 1.5px solid #6366f1;
+    box-shadow: 0 0 0 2px #a5b4fc44;
+    background: #fff;
+}
+.form-card button.create-btn {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 12px 0;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="main-content" style="max-width:500px;margin:auto;">
+    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку активностей</a>
+    <h1 style="margin-bottom:24px;">{% if mode == 'create' %}Создать активность{% else %}Редактировать активность{% endif %}</h1>
+    <form id="activity-form" class="form-card">
+        <label>Название:<input type="text" name="name" id="name" required maxlength="50"></label>
+        <label>URL:<input type="text" name="url" id="url" maxlength="200"></label>
+        <label>Описание:<textarea name="description" id="description" required></textarea></label>
+        <label>ОС:<input type="text" name="os" id="os" required></label>
+        <button type="submit" class="create-btn" style="margin-top:18px;">{% if mode == 'create' %}Создать{% else %}Сохранить{% endif %}</button>
+    </form>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='success') {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.className = 'toast show';
+    if (type === 'error') toast.style.background = 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    else toast.style.background = '';
+    setTimeout(() => { toast.className = 'toast'; toast.style.background = ''; }, 2500);
+}
+let activityData = null;
+let loaded = {activity: false};
+function tryFillForm() {
+    if (loaded.activity) fillForm(activityData);
+}
+function fillForm(activity) {
+    activityData = activity;
+    document.getElementById('name').value = activity.name || '';
+    document.getElementById('url').value = activity.url || '';
+    document.getElementById('description').value = activity.description || '';
+    document.getElementById('os').value = activity.os || '';
+}
+{% if mode == 'edit' %}
+fetch(`http://localhost:8000/activities/{{ activity_id }}`)
+  .then(resp => resp.json())
+  .then(data => { activityData = data; loaded.activity = true; tryFillForm(); })
+  .catch(() => showToast('Ошибка загрузки активности', 'error'));
+{% endif %}
+document.getElementById('activity-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = {
+        name: document.getElementById('name').value,
+        url: document.getElementById('url').value,
+        description: document.getElementById('description').value,
+        os: document.getElementById('os').value
+    };
+    {% if mode == 'create' %}
+    fetch('http://localhost:8000/activities', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        if (resp.message) {
+            showToast('Активность создана!');
+            setTimeout(() => location.href = '/activities/', 1200);
+        } else {
+            showToast('Ошибка создания', 'error');
+        }
+    })
+    .catch(() => showToast('Ошибка создания', 'error'));
+    {% else %}
+    fetch(`http://localhost:8000/activities/{{ activity_id }}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(resp => resp.json())
+    .then(resp => {
+        if (resp.message || resp.id) {
+            showToast('Изменения сохранены!');
+            setTimeout(() => location.href = '/activities/{{ activity_id }}/', 1200);
+        } else {
+            showToast('Ошибка сохранения', 'error');
+        }
+    })
+    .catch(() => showToast('Ошибка сохранения', 'error'));
+    {% endif %}
+};
+</script>
+{% endblock %} 
