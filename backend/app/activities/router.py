@@ -35,8 +35,7 @@ async def create_activity(activity_data: ActivityCreateSchema):
         )
         session.add(new_activity)
         await session.commit()
-        await session.refresh(new_activity)
-        return new_activity
+        return {"message": "Активность успешно создана"}
 
 
 @router_activities.put("/{activity_id}", summary='Обновить активность')

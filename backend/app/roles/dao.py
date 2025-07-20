@@ -34,7 +34,7 @@ class RoleDAO(BaseDAO):
     @classmethod
     async def get_by_id(cls, role_id: int):
         async with async_session_maker() as session:
-            stmt = select(Role).options(selectinload(Role.activities)).filter_by(id=role_id)
+            stmt = select(Role).filter_by(id=role_id)
             result = await session.execute(stmt)
             role = result.scalar_one_or_none()
             if not role:
@@ -78,7 +78,7 @@ class RoleDAO(BaseDAO):
     @classmethod
     async def set_activities(cls, role_id: int, activity_ids: list[int]):
         async with async_session_maker() as session:
-            stmt = select(Role).options(selectinload(Role.activities)).filter_by(id=role_id)
+            stmt = select(Role).filter_by(id=role_id)
             result = await session.execute(stmt)
             role = result.scalar_one_or_none()
             if not role:

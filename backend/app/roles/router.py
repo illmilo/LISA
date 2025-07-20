@@ -1,42 +1,78 @@
 from fastapi import APIRouter, HTTPException
-from app.roles.dao import RoleDAO
-from app.roles.schemas import RoleSchema, RoleCreateSchema, RoleUpdateSchema, RoleSetActivitiesSchema, RoleNameSchema
+from app.roles.schemas import RoleCreateSchema, RoleUpdateSchema, RoleSchema, RoleNameSchema
+from app.roles.models import Role
+from app.database import async_session_maker
+from sqlalchemy.future import select
 from typing import List
 
 router_roles = APIRouter(prefix='/roles', tags=['Роли'])
 
-@router_roles.get('/', response_model=List[RoleSchema])
-async def get_all_roles() :
-    return await RoleDAO.get_all()
+@router_roles.post('/')
+async def create_role(role: RoleCreateSchema):
+    async with async_session_maker() as session:
+        db_role = Role(**role.model_dump())
+        session.add(db_role)
+        await session.commit()
+    return {"message": "Роль успешно создана"}
+
+@router_roles.get('/', response_model=List[RoleNameSchema])
+async def get_all_roles():
+    async with async_session_maker() as session:
+        result = await session.execute(select(Role))
+        return result.scalars().all()
 
 @router_roles.get('/{role_id}', response_model=RoleSchema)
 async def get_role(role_id: int):
-    role = await RoleDAO.get_by_id(role_id)
-    if not role:
-        raise HTTPException(status_code=404, detail='Роль не найдена')
-    return role
-
-@router_roles.post('/', response_model=RoleSchema)
-async def create_role(role: RoleCreateSchema):
-    return await RoleDAO.create(name=role.name)
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        return role
 
 @router_roles.put('/{role_id}', response_model=RoleSchema)
 async def update_role(role_id: int, role_data: RoleUpdateSchema):
-    role = await RoleDAO.update(role_id, name=role_data.name)
-    if not role:
-        raise HTTPException(status_code=404, detail='Роль не найдена')
-    return role
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        for field, value in role_data.model_dump(exclude_unset=True).items():
+            setattr(role, field, value)
+        await session.commit()
+        await session.refresh(role)
+        return role
 
 @router_roles.delete('/{role_id}')
 async def delete_role(role_id: int):
-    success = await RoleDAO.delete(role_id)
-    if not success:
-        raise HTTPException(status_code=404, detail='Роль не найдена')
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        await session.delete(role)
+        await session.commit()
     return {"message": "Роль удалена"}
 
-@router_roles.post('/{role_id}/set_activities', response_model=RoleSchema)
-async def set_activities(role_id: int, data: RoleSetActivitiesSchema):
-    role = await RoleDAO.set_activities(role_id, data.activity_ids)
-    if not role:
-        raise HTTPException(status_code=404, detail='Роль не найдена')
-    return role
+@router_roles.post('/{role_id}/add-activity/{activity_id}', summary='Назначить активность роли')
+async def add_activity_to_role(role_id: int, activity_id: int):
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        if role.activity_ids is None:
+            role.activity_ids = []
+        if activity_id not in role.activity_ids:
+            role.activity_ids.append(activity_id)
+        await session.commit()
+        await session.refresh(role)
+    return {"message": "Активность добавлена к роли"}
+
+@router_roles.post('/{role_id}/remove-activity/{activity_id}', summary='Удалить активность у роли')
+async def remove_activity_from_role(role_id: int, activity_id: int):
+    async with async_session_maker() as session:
+        role = await session.get(Role, role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="Роль не найдена")
+        if role.activity_ids and activity_id in role.activity_ids:
+            role.activity_ids.remove(activity_id)
+        await session.commit()
+        await session.refresh(role)
+    return {"message": "Активность удалена у роли"}

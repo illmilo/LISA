@@ -1,64 +1,45 @@
 import asyncio
 from app.database import async_session_maker
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-
-from app.employees.models import Employee
 from app.roles.models import Role
 from app.activities.models import Activity
-from app.servers.models import Server
+from sqlalchemy import select
 
 async def main():
     async with async_session_maker() as session:
-        # Роли
-        roles = ["admin", "user", "dev"]
-        role_objs = {}
-        for role_name in roles:
-            result = await session.execute(select(Role).filter_by(name=role_name))
-            role_obj = result.scalar_one_or_none()
-            if not role_obj:
-                role_obj = Role(name=role_name)
-                session.add(role_obj)
-                await session.commit()
-                await session.refresh(role_obj)
-            role_objs[role_name] = role_obj
-
-        activities = [
+        activities_data = [
             {"name": "firefox", "url": "duckduckgo.com", "description": "Web browser", "os": "linux"},
             {"name": "libreoffice calc", "url": None, "description": "Spreadsheet", "os": "linux"},
             {"name": "libreoffice writer", "url": None, "description": "Text editor", "os": "linux"},
             {"name": "text editor", "url": None, "description": "Simple text editor", "os": "linux"},
         ]
         activity_objs = {}
-        for act in activities:
+        for act in activities_data:
             result = await session.execute(select(Activity).filter_by(name=act["name"]))
-            activity_obj = result.scalar_one_or_none()
-            if not activity_obj:
-                activity_obj = Activity(**act)
-                session.add(activity_obj)
+            activity = result.scalar_one_or_none()
+            if not activity:
+                activity = Activity(**act)
+                session.add(activity)
                 await session.commit()
-                await session.refresh(activity_obj)
-            activity_objs[act["name"]] = activity_obj
+                await session.refresh(activity)
+            activity_objs[act["name"]] = activity
 
-        user_role = (await session.execute(
-            select(Role).options(selectinload(Role.activities)).filter_by(name="user")
-        )).scalar_one_or_none()
-        admin_role = (await session.execute(
-            select(Role).options(selectinload(Role.activities)).filter_by(name="admin")
-        )).scalar_one_or_none()
-        dev_role = (await session.execute(
-            select(Role).options(selectinload(Role.activities)).filter_by(name="dev")
-        )).scalar_one_or_none()
-
-        user_role.activities = [
-            activity_objs["firefox"],
-            activity_objs["libreoffice calc"],
-            activity_objs["libreoffice writer"],
-            activity_objs["text editor"]
+        roles_data = [
+            {"name": "admin", "activity_names": ["firefox"]},
+            {"name": "user", "activity_names": ["firefox", "libreoffice calc", "libreoffice writer", "text editor"]},
+            {"name": "dev", "activity_names": ["firefox", "text editor"]},
         ]
-        admin_role.activities = [activity_objs["firefox"]]
-        dev_role.activities = [activity_objs["firefox"], activity_objs["text editor"]]
-        await session.commit()
+        for role_data in roles_data:
+            result = await session.execute(select(Role).filter_by(name=role_data["name"]))
+            role = result.scalar_one_or_none()
+            activity_ids = [activity_objs[name].id for name in role_data["activity_names"]]
+            if not role:
+                role = Role(name=role_data["name"], activity_ids=activity_ids)
+                session.add(role)
+            else:
+                role.activity_ids = activity_ids
+            await session.commit()
+
+    print("Инициализация завершена!")
 
 if __name__ == "__main__":
     asyncio.run(main()) 

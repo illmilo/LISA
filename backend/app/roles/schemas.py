@@ -1,25 +1,20 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from app.activities.schemas import ActivitySchema, ActivityShallowSchema
-
-class RoleBaseSchema(BaseModel):
-    name: str = Field(..., min_length=1, max_length=50, description="Название роли")
-
-class RoleCreateSchema(RoleBaseSchema):
-    pass
-
-class RoleUpdateSchema(RoleBaseSchema):
-    pass
-
-class RoleSchema(RoleBaseSchema):
-    name: str
-    id: int
-    activities: Optional[List[ActivityShallowSchema]] = Field(default_factory=list)
-    class Config:
-        from_attributes = True
-
-class RoleSetActivitiesSchema(BaseModel):
-    activity_ids: List[int] = Field(..., description="Список id активностей для роли")
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List
 
 class RoleNameSchema(BaseModel):
+    id: int
     name: str
+
+class RoleCreateSchema(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    activity_ids: List[int] = Field(default_factory=list)
+
+class RoleUpdateSchema(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    activity_ids: List[int] = Field(default_factory=list)
+
+class RoleSchema(BaseModel):
+    id: int
+    name: str
+    activity_ids: List[int]
+    model_config = ConfigDict(from_attributes=True)
