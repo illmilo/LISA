@@ -59,11 +59,11 @@ a.create-btn, a.edit-btn {
 </style>
 {% endblock %}
 {% block content %}
-<div class="main-content" style="max-width:500px;margin:auto;">
-    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку ролей</a>
-    <h1 style="margin-bottom:24px;">Редактировать роль</h1>
+<div class="role-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку ролей</a>
+    <h1 class="role-detail-title">Редактировать роль</h1>
     <form id="role-form" class="form-card">
-        <label>Имя роли:<input type="text" name="name" id="name" required maxlength="50"></label>
+        <label>Имя:<input type="text" name="name" id="name" required maxlength="50"></label>
         <div style="margin:18px 0 8px 0;"><b>Активности:</b></div>
         <div id="activities-list" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
         <button type="submit" class="create-btn" style="margin-top:18px;">Сохранить</button>

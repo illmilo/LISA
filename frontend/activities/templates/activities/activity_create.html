@@ -12,14 +12,19 @@ a.create-btn, a.edit-btn { text-decoration: none !important; }
 </style>
 {% endblock %}
 {% block content %}
-<div class="main-content" style="max-width:500px;margin:auto;">
-    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку активностей</a>
-    <h1 style="margin-bottom:24px;">Создать активность</h1>
+<div class="activity-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку активностей</a>
+    <h1 class="activity-detail-title">Создать активность</h1>
     <form id="activity-form" class="form-card">
-        <label>Название:<input type="text" name="name" id="name" required maxlength="50"></label>
+        <label>Имя:<input type="text" name="name" id="name" required maxlength="50"></label>
+        <label>Описание:<textarea name="description" id="description" required maxlength="200"></textarea></label>
+        <label>OS:
+            <select name="os" id="os" required>
+                <option value="linux">linux</option>
+                <option value="windows">windows</option>
+            </select>
+        </label>
         <label>URL:<input type="text" name="url" id="url" maxlength="200"></label>
-        <label>Описание:<textarea name="description" id="description" required></textarea></label>
-        <label>ОС:<input type="text" name="os" id="os" required></label>
         <button type="submit" class="create-btn" style="margin-top:18px;">Создать</button>
     </form>
 </div>

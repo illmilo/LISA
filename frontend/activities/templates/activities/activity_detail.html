@@ -25,19 +25,19 @@ a.create-btn, a.edit-btn {
     text-decoration: none;
 }
 </style>
-<div class="main-content" style="max-width:600px;margin:auto;position:relative;">
-    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку активностей</a>
-    <a href="/activities/{{ activity_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;padding:8px 12px;background:linear-gradient(90deg,#A855F7,#7E22CE);border-radius:8px;z-index:2;display:flex;align-items:center;gap:6px;color:white;text-decoration:none;">
+<div class="activity-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="/activities/{{ activity_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;z-index:2;">
         <i class="fa-solid fa-pen-to-square"></i>
     </a>
-    <h1 style="margin-bottom:24px;">Детали активности</h1>
-    <div class="item list-item" style="margin-bottom:32px;flex-direction:column;align-items:flex-start;">
+    <a href="{% url 'activities' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку активностей</a>
+    <h1 class="activity-detail-title">Детали активности</h1>
+    <div class="item list-item activity-detail-card">
         <div><b>Имя:</b> <span id="activity-name"></span></div>
         <div><b>ID:</b> <span id="activity-id"></span></div>
         <div><b>Описание:</b> <span id="activity-description"></span></div>
     </div>
     <div style="display:flex; gap:16px; margin-bottom:30px;justify-content:center;">
-        <a href="/activities/{{ activity_id }}/delete/" class="create-btn" style="background:linear-gradient(90deg,#ef4444,#fca5a5);">Удалить</a>
+        <a href="/activities/{{ activity_id }}/delete/" class="create-btn danger-btn">Удалить</a>
     </div>
     <div id="activity-agents" style="margin-bottom:18px;"></div>
     <div id="activity-roles"></div>

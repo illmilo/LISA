@@ -9,18 +9,18 @@ a.create-btn, a.edit-btn {
     text-decoration: none !important;
 }
 </style>
-<div class="main-content" style="max-width:600px;margin:auto;position:relative;">
-    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#6366f1,#a5b4fc);">← К списку ролей</a>
-    <h1 style="margin-bottom:24px;">Детали роли</h1>
-    <div class="item list-item" style="margin-bottom:32px;flex-direction:column;align-items:flex-start;">
+<div class="role-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="/roles/{{ role_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;z-index:2;">
+        <i class="fa-solid fa-pen-to-square"></i>
+    </a>
+    <a href="{% url 'roles' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку ролей</a>
+    <h1 class="role-detail-title">Детали роли</h1>
+    <div class="item list-item role-detail-card">
         <div><b>Имя:</b> <span id="role-name"></span></div>
         <div><b>ID:</b> <span id="role-id"></span></div>
     </div>
     <div style="display:flex; gap:16px; margin-bottom:30px;justify-content:center;">
-        <a href="/roles/{{ role_id }}/edit/" class="edit-btn" title="Редактировать" style="position:absolute;top:18px;right:18px;padding:8px 12px;background:linear-gradient(90deg,#6366f1,#a5b4fc);border-radius:8px;z-index:2;display:flex;align-items:center;gap:6px;color:white;text-decoration:none;">
-            <i class="fa-solid fa-pen-to-square"></i>
-        </a>
-        <button class="create-btn" onclick="deleteRole({{ role_id }})" style="background:linear-gradient(90deg,#ef4444,#fca5a5);">Удалить</button>
+        <button class="create-btn danger-btn" onclick="deleteRole({{ role_id }})">Удалить</button>
     </div>
     <h2 style="margin-bottom:12px;">Активности роли</h2>
     <div class="list" id="role-activities-list"></div>

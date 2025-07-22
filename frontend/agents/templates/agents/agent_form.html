@@ -59,9 +59,9 @@ a.create-btn, a.edit-btn {
 </style>
 {% endblock %}
 {% block content %}
-<div class="main-content" style="max-width:500px;margin:auto;">
-    <a href="{% url 'agents' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#A855F7,#7E22CE);">← К списку агентов</a>
-    <h1 style="margin-bottom:24px;">Редактировать агента</h1>
+<div class="agent-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'agents' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку агентов</a>
+    <h1 class="agent-detail-title">Редактировать агента</h1>
     <form id="agent-form" class="form-card">
         <label>Имя:<input type="text" name="name" id="name" required maxlength="50"></label>
         <label>ОС:<input type="text" name="os" id="os" required maxlength="50"></label>

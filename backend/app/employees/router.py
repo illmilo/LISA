@@ -130,6 +130,10 @@ async def start_agent(employee_id: int):
     return {"status": "ok", "agent_dir": agent_dir, "config_path": config_path}
 
 
+
+
+
+
 @router_employees.post("/{employee_id}/stop_agent", summary="Остановить linux-агента")
 async def stop_agent(employee_id: int):
     pass  # дальше докер останавливает агента

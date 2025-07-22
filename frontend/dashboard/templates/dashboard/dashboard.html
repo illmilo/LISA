@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -5,8 +6,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="favicon" href="{% static 'dashboard/images/logo.svg' %}">
-    <link rel="icon" href="{% static 'dashboard/images/logo.svg' %}">
+    <link rel="favicon" href="{% static 'logo.png' %}">
+    <link rel="icon" href="{% static 'logo.png' %}">
     <title>{% block title %}Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'dashboard/css/style.css' %}" type="text/css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css" rel="stylesheet" />
@@ -17,42 +18,35 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container" style="max-width:1200px;margin:40px auto 0 auto;background:#181818;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.10);border:1px solid #FFD600;padding:32px 16px;position:relative;">
         <header style="position:relative;">
             <h1>{% block header %}Dashboard{% endblock %}</h1>
         </header>
-
         <div class="dashboard-stats">
-            <a href="{% url 'dashboard' %}" class="stat-card"
-                style="background: linear-gradient(90deg, #f75555, #ce2222);">
-                <i class="fa-solid fa-house fa-2xl" style="color:aliceblue"></i>
+            <a href="{% url 'dashboard' %}" class="stat-card">
+                <i class="fa-solid fa-house fa-2xl"></i>
                 <h2 id="home-text">Dashboard</h2>
             </a>
-            <a href="{% url 'agents' %}" class="stat-card"
-                style="background: linear-gradient(90deg, #A855F7, #7E22CE);">
-                <i class="fa-solid fa-users fa-2xl" style="color:aliceblue"></i>
+            <a href="{% url 'agents' %}" class="stat-card">
+                <i class="fa-solid fa-users fa-2xl"></i>
                 <div class="stat-desc">
                     <h2>Agents</h2>
                 </div>
             </a>
-
-            <a href="{% url 'servers' %}" class="stat-card"
-                style="background: linear-gradient(90deg, #3B82F6, #1D4ED8);">
-                <i class="fa-solid fa-server fa-2xl" style="color:aliceblue"></i>
+            <a href="{% url 'servers' %}" class="stat-card">
+                <i class="fa-solid fa-server fa-2xl"></i>
                 <div class="stat-desc">
                     <h2>Servers</h2>
                 </div>
             </a>
-
-            <a href="{% url 'activities' %}" class="stat-card" style="background: linear-gradient(90deg, #c2c522, #807c15);">
-                <i class="fa-solid fa-laptop-code fa-2xl" style="color:aliceblue"></i>
+            <a href="{% url 'activities' %}" class="stat-card">
+                <i class="fa-solid fa-laptop-code fa-2xl"></i>
                 <div class="stat-desc">
                     <h2>Activities</h2>
                 </div>
             </a>
-
-            <a href="{% url 'roles' %}" class="stat-card" style="background: linear-gradient(90deg, #22C55E, #15803D);">
-                <i class="fa-solid fa-list fa-2xl" style="color:aliceblue"></i>
+            <a href="{% url 'roles' %}" class="stat-card">
+                <i class="fa-solid fa-list fa-2xl"></i>
                 <div class="stat-desc">
                     <h2>Roles</h2>
                 </div>

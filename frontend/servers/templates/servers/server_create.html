@@ -13,9 +13,9 @@ a.create-btn, a.edit-btn { text-decoration: none !important; }
 </style>
 {% endblock %}
 {% block content %}
-<div class="main-content" style="max-width:500px;margin:auto;">
-    <a href="{% url 'servers' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;background:linear-gradient(90deg,#3B82F6,#1D4ED8);">← К списку серверов</a>
-    <h1 style="margin-bottom:24px;">Создать сервер</h1>
+<div class="server-detail-main" style="max-width:600px;margin:auto;position:relative;">
+    <a href="{% url 'servers' %}" class="create-btn" style="margin-bottom:24px;display:inline-block;">← К списку серверов</a>
+    <h1 class="server-detail-title">Создать сервер</h1>
     <form id="server-form" class="form-card">
         <label>Имя сервера:<input type="text" name="name" id="name" required maxlength="50"></label>
         <label>Пароль:<input type="text" name="password" id="password" required maxlength="50"></label>
